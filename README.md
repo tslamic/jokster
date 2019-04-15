@@ -72,11 +72,11 @@ class Repo(private val api: FunnyApi) {
 }
 ``` 
 
-gives us the ability to pass `Repo` any implementation of the `FunnyApi` interface. This makes testing easier and ensures `Repo` needs no code changes across various implementations.
+gives us the ability to pass `Repo` any implementation of the `FunnyApi` interface. This makes testing easier and ensures `Repo` needs no code changes if various `FunnyApi` implementations are provided.
 
-So, how do we pass `FunnyApi` instances to the `Repo` class then? You guessed it - it's with dependency injection! 
+So, how do we pass `FunnyApi` instances to the `Repo` class? You guessed it - it's with dependency injection! 
 
-## A super-duper-srsly-vague intro to Dagger2
+## A vague intro to Dagger2
 
 Dagger2 is a popular DI framework for Java, Kotlin and Android. To use it, first add it to the list of your dependencies in `build.gradle`:
 
@@ -98,7 +98,7 @@ dependencies {
 }
 ```
 
-To provide dependencies, you need _modules_. Modules are classes with the `@Module` annotation, and they include `@Provides` methods:
+To provide dependencies, you need _modules_. Modules are classes with the `@Module` annotation, and methods annotated with `@Provides`:
 
 ```kotlin
 @Module  
@@ -107,9 +107,9 @@ class NetworkModule {
 }
 ```
 
-Dagger will inspect the class, look at the return types of the methods annotated with `@Provides` and say: _I now know how to create these objects!_
+Dagger will inspect the class, look at the return types of the annotated methods, and say: _I now know how to create these objects!_
 
-Another method might need an `OkHttpClient` to create an instance:
+Another method might need an `OkHttpClient` to create a dependency:
 
 ```kotlin
 @Module  
@@ -123,7 +123,7 @@ Assuming Dagger knows about the `NetworkModule`, it knows how to create the `OkH
 ```kotlin
 @Module  
 interface ApiModule {  
-    // exactly the same as the ApiModule above, but shorter. 
+    // Equivalent to the ApiModule above, just shorter. 
     @Binds fun providesFunnyApi(api: FunnyApiImpl): FunnyApi
 }
 ```
@@ -151,7 +151,7 @@ interface AppComponent {
 }
 ```
 
-Note the `@Component` annotation, along with the list of modules this component includes. 
+Note the `@Component` annotation, along with the list of modules it includes.
 
 Dagger will generate a class called `DaggerAppComponent` implementing the `AppComponent` interface. To consume the dependencies, you need a `DaggerAppComponent` instance, which is typically created in an `Application` class:
 
@@ -190,6 +190,16 @@ class MainActivity : AppCompatActivity() {
     }
 }
 ```
+
+Note that the `inject` method is not magical, nor special. The name is merely a convention, we could easily call it `awesomeMethod4Realz`. The important bit is the parameter - `MainActivity`. Dagger will generate a class that knows how to populate all `@Inject` fields, and whenever `component.inject(this)` is invoked, a method looking roughly like this will be invoked: 
+
+```java
+public static void injectFactory(MainActivity instance, JokerViewModel.Factory factory) {  
+  instance.factory = factory;  
+}
+```
+
+As you may have guessed, the `JokerViewModel.Factory` is created and provided by Dagger.
 
 2. Call the appropriate accessor methods:
 
