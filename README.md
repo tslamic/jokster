@@ -114,7 +114,7 @@ Another method might need an `OkHttpClient` to create a dependency:
 ```kotlin
 @Module  
 class ApiModule {  
-    @Provides fun providesFunnyApi(c: OkHttpClient): FunnyApi = FunnyApiImpl(c)
+    @Provides fun providesFunnyApi(c: OkHttpClient): FunnyApi = ChuckApi(c)
 }
 ```
 
@@ -124,14 +124,14 @@ Assuming Dagger knows about the `NetworkModule`, it knows how to create the `OkH
 @Module  
 interface ApiModule {  
     // Equivalent to the ApiModule above, just shorter. 
-    @Binds fun providesFunnyApi(api: FunnyApiImpl): FunnyApi
+    @Binds fun providesFunnyApi(api: ChuckApi): FunnyApi
 }
 ```
 
 To let Dagger create objects on your behalf, you need to add an `@Inject` annotation to your constructors:
 
 ```kotlin
-class FunnyApiImpl @Inject constructor(c: OkHttpClient) : FunnyApi {  
+class ChuckApi @Inject constructor(c: OkHttpClient) : FunnyApi {  
     // ...
 }
 ```
@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity() {
 }
 ```
 
-Note that the `inject` method is not magical, nor special. The name is merely a convention, we could easily call it `awesomeMethod4Realz`. The important bit is the parameter - `MainActivity`. Dagger will generate a class that knows how to populate all `@Inject` fields, and whenever `component.inject(this)` is invoked, a method looking roughly like this will be invoked: 
+Note that the `inject` method is not magical, nor special. The name is merely a convention, we could easily call it `awesomeMethod4Realz`. The important bit is the parameter - `MainActivity`. Dagger will generate a class that knows how to populate all `@Inject` fields, and whenever `component.inject(this)` is invoked, the call will be propagated to a method looking like this:
 
 ```java
 public static void injectFactory(MainActivity instance, JokerViewModel.Factory factory) {  
